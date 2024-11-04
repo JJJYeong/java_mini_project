@@ -144,11 +144,44 @@ public class GameDAO {
 		
 		try {
 			con = DriverManager.getConnection(url, userid, passwd);
-			String sql = "UPDATE LANKING SET duration = ? WHERE idx = ?";
+			String sql = "UPDATE LANKING SET duration = LEAST(?, duration) WHERE idx = ?";
 			pstmt = con.prepareStatement(sql);
 			
 			pstmt.setLong(1, duration);
 			pstmt.setInt(2, idx);
+			
+			// 성공 시 다시 조회
+			if(pstmt.executeUpdate() > 0) {
+				result = selectLanking(writeidx);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+		} finally {
+			try {
+				if (pstmt != null) pstmt.close();
+				if (con != null) con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return result;
+	}
+	
+	// 내 기록 삭제
+	public Map<String, LankingDTO> deleteLanking(String nickname, Integer writeidx) {
+		Map<String, LankingDTO> result = new LinkedHashMap<String, LankingDTO>();
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		
+		try {
+			con = DriverManager.getConnection(url, userid, passwd);
+			String sql = "DELETE FROM LANKING WHERE nickname = ?";
+			pstmt = con.prepareStatement(sql);
+			
+			pstmt.setString(1, nickname);
 			
 			// 성공 시 다시 조회
 			if(pstmt.executeUpdate() > 0) {
